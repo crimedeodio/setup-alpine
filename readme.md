@@ -14,13 +14,13 @@ clone the repository
 https://codeberg.org/crimedeodio/setup-alpine.git
 ```
 
-then, run the script
+then, configure and run the script
 ```
 cd setup-alpine
+vi setup-alpine.sh
 sh setup-alpine.sh
 ```
 
 # todo
 
 * replace `openrc` with `nitro-init`
-* make it more automated, just edit the options in the script and run it
