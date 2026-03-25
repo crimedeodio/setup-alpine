@@ -1,0 +1,121 @@
+--- original/setup-disk	2026-03-24 22:22:15.203276839 -0300
++++ patched/setup-disk	2026-03-24 23:18:32.359443672 -0300
+@@ -422,6 +422,49 @@
+ 	echo "root=$root modules=$modules $kernel_opts" > "$mnt"/boot/cmdline.txt
+ }
+ 
++# setup limine bootloader
++setup_limine() {
++	local mnt="$1" root="$2" modules="$3" kernel_opts="$4" bootdev="$5"
++	shift 5
++	local limine_dir=
++	if [ -n "$USE_EFI" ]; then
++		local efi_directory
++		efi_directory=$(find_efi_directory "$mnt") || \
++			echo "WARNING: EFI directory was not found" >&2
++		limine_dir="$efi_directory"/limine
++	else
++		limine_dir="$mnt"/boot/limine
++	fi
++	mkdir -p "$limine_dir"
++	cat > "$limine_dir"/limine.conf <<- EOF
++	timeout: 5
++
++	/Alpine Linux
++	    protocol: linux
++	    kernel_path: boot():/vmlinuz-$KERNEL_FLAVOR
++	    kernel_cmdline: root=$root modules=$modules $kernel_opts
++	    module_path: boot():/initramfs-$KERNEL_FLAVOR
++	EOF
++	if [ -n "$USE_EFI" ]; then
++		local fwa
++		case "$ARCH" in
++			x86_64)  fwa=X64 ;;
++			x86)     fwa=IA32 ;;
++			aarch64) fwa=AA64 ;;
++			riscv64) fwa=RISCV64 ;;
++			*) die "Limine EFI is not supported for $ARCH" ;;
++		esac
++		$MOCK install -D /usr/share/limine/BOOT${fwa}.EFI \
++			"$efi_directory"/EFI/BOOT/BOOT${fwa}.EFI
++	else
++		$MOCK cp /usr/share/limine/limine-bios.sys "$limine_dir"/
++		for disk in "$@"; do
++			echo "Installing limine on $disk"
++			$MOCK limine bios-install "$disk"
++		done
++	fi
++}
++
+ # detect which firmware packages to install, if any
+ select_firmware_pkgs() {
+ 	local firmware_pkgs="$( (cd_assert "${ROOT}sys/module/" 2>/dev/null && echo *) \
+@@ -637,6 +680,7 @@
+ 		zipl) setup_zipl "$mnt" "$root" "$modules" "$kernel_opts" ;;
+ 		raspberrypi-bootloader) setup_raspberrypi_bootloader "$mnt" "$root" "$modules" "$kernel_opts" ;;
+ 		u-boot) setup_uboot "$mnt" "$root" "$modules" "$kernel_opts" ;;
++		limine) setup_limine "$mnt" "$root" "$modules" "$kernel_opts" "$bootdev" $disks ;;
+ 		*) die "Bootloader \"$BOOTLOADER\" not supported!" ;;
+ 	esac
+ 
+@@ -798,6 +842,8 @@
+ 		bootloader=grub-ieee1275
+ 	elif [ "$ARCH" = "s390x" ]; then
+ 		bootloader=s390-tools
++	elif [ "$BOOTLOADER" = "limine" ]; then
++		bootloader=limine
+ 	elif [ -n "$USE_EFI" ]; then
+ 		bootloader=grub-efi
+ 	elif [ "$BOOTLOADER" = "grub" ]; then
+@@ -823,6 +869,7 @@
+ 		xfs) fstools="$fstools xfsprogs";;
+ 		ext*) fstools="$fstools e2fsprogs";;
+ 		btrfs) fstools="$fstools btrfs-progs";;
++		f2fs) fstools="$fstools f2fs-tools";;
+ 		vfat) fstools="$fstools dosfstools";;
+ 		esac
+ 	done
+@@ -1157,12 +1204,13 @@
+ 	local disks="$@" mkfs_args="-q"
+ 	local sysroot="${ROOT}${SYSROOT#/}"
+ 	[ "$ROOTFS" = "btrfs" ] && mkfs_args=""
++	[ "$ROOTFS" = "f2fs" ] && mkfs_args=""
+ 	$MOCK mkfs.$ROOTFS $MKFS_OPTS_ROOT $mkfs_args "$root_dev"
+ 	mkdir -p "$sysroot"
+ 	mount -t "$ROOTFS" "$root_dev" "$sysroot" || return 1
+ 	if [ -n "$boot_dev" ]; then
+ 		# use separate esp partirion with UEFI but without crypt
+-		if [ -n "$USE_EFI" ] && [ -z "$USE_CRYPT" ]; then
++		if [ -n "$USE_EFI" ] && [ -z "$USE_CRYPT" ] && [ "$BOOTLOADER" != "limine" ]; then
+ 			mkdir -p "$sysroot"/boot/efi
+ 			mount -t "$BOOTFS" "$boot_dev" "$sysroot"/boot/efi || return 1
+ 		else
+@@ -1462,7 +1510,7 @@
+ 		If BOOTLOADER is specified, the specified bootloader will be used.
+ 		If no bootloader is specified, the default bootloader is syslinux(extlinux)
+ 		except when EFI is detected or explicitly set by USE_EFI which will select grub.
+-		Supported bootloaders are: grub, syslinux, zipl, raspberrypi-bootloader, u-boot, none
++		Supported bootloaders are: grub, syslinux, zipl, raspberrypi-bootloader, u-boot, limine, none
+ 
+ 		If KERNELOPTS is specified, it will be appended to the kernel boot parameters.
+ 		Default is: quiet
+@@ -1476,7 +1524,7 @@
+ 		filesystem. If not specified, the default filesystem is ext4.
+ 		Supported filesystems for
+ 		  boot: ext2, ext3, ext4, btrfs, xfs, vfat(EFI)
+-		  root: ext2, ext3, ext4, btrfs, xfs
++		  root: ext2, ext3, ext4, btrfs, xfs, f2fs
+ 		   var: ext2, ext3, ext4, btrfs, xfs
+ 
+ 		If DEFAULT_DISK is specified (device name) and none are set in command-line,
+@@ -1559,6 +1607,10 @@
+ 	arm*|aarch64|riscv64) : ${BOOTLOADER:=u-boot};;
+ esac
+ 
++if [ "$BOOTLOADER" = "limine" ]; then
++	BOOTFS=vfat
++fi
++
+ if [ -d "$1" ]; then
+ 	# install to given mounted root
+ 	apk add --quiet $(select_bootloader_pkg)
