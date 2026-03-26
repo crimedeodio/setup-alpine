@@ -1,4 +1,4 @@
-alpine linux with f2fs and limine
+alpine linux with f2fs, limine and nitro-init.
 
 # installation
 
@@ -23,4 +23,9 @@ sh setup-alpine.sh
 
 # todo
 
-* replace `openrc` with `nitro-init`
+* fix hostname
+* shutdown, restart
+* more services (eiwd, ssh, bluetooth)
+* modular service selection in the script
+* remove openrc
+... basically everything related to the init system

@@ -8,19 +8,18 @@ hostname="alpine"
 keymap="us us"
 timezone="UTC"
 kernel="stable"
-# lts, virt, stable, rpi, openpax, asahi,
-# elm, gru, eswin, sophgo, p550, starfive,
-# jh7100, spacemint
 
 disk="/dev/sda"
-root_filesystem="f2fs" # ext[2-4], btrfs, xfs, f2fs
-swap="0"               # in MB, 0 to disable
-bootloader="limine"    # grub, syslinux, limine
+root_filesystem="f2fs"
+swap="0"
+bootloader="limine"
 
-repository="1" # 1: cdn, f: fastest, r: random
-version="edge" # latest-stable, edge, etc.
+repository="1"
+version="edge"
 
-patch /usr/sbin/setup-disk setup-disk.patch
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+patch /usr/sbin/setup-disk "$SCRIPT_DIR/setup-disk.patch"
 
 APKREPOSOPTS="-c -$repository" \
 BOOTLOADER="$bootloader" \
@@ -37,23 +36,35 @@ PROXYOPTS=none \
 SSHDOPTS=none \
 setup-alpine -e
 
-# chroot
 partnum=$(( swap > 0 ? 3 : 2 ))
 case $disk in
   *[0-9]) root_part="${disk}p${partnum}" ;;
   *)      root_part="${disk}${partnum}"   ;;
 esac
 
+umount -R /mnt 2>/dev/null || true
 mount "$root_part" /mnt
+
+echo $hostname > /mnt/etc/hostname
+cp -r "$SCRIPT_DIR/nitro" /mnt/tmp/nitro
 
 chroot /mnt /bin/sh << EOF
 echo "$username:$user_password" | chpasswd
 echo "root:$root_password" | chpasswd
+
+apk --no-cache --quiet add \
+  --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing \
+  nitro-init eiwd agetty
+
+mkdir -p /etc/nitro
+cp -r /tmp/nitro/. /etc/nitro/
+rm -rf /tmp/nitro
+
+for i in 1 2 3; do
+  ln -sf agetty@ /etc/nitro/agetty@tty\$i
+done
+
+ln -sf /usr/sbin/nitro /sbin/init
 EOF
 
 umount /mnt
-
-echo done
-# tail -n 1 /etc/apk/repositories | sed 's/community/testing/' >> /etc/apk/repositories 
-# apk add nitro-init
-# ...
