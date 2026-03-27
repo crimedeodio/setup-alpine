@@ -7,10 +7,8 @@ mount -o remount,rw /
 
 mkdir -p /run/nitro/notify
 
-nitroctl up mdev
-nitroctl up acpid
-nitroctl up agetty@tty1
-nitroctl up agetty@tty2
-nitroctl up agetty@tty3
+for i in $(seq 3); do
+  nitroctl up agetty@tty\$i
+done
 
 exit 0

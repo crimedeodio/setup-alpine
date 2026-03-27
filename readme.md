@@ -23,9 +23,5 @@ sh setup-alpine.sh
 
 # todo
 
-* fix hostname
-* shutdown, restart
-* more services (eiwd, ssh, bluetooth)
 * modular service selection in the script
 * remove openrc
-... basically everything related to the init system

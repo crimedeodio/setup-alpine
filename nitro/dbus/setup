@@ -1,0 +1,4 @@
+#!/bin/sh
+rm -f /run/dbus/pid
+install -m755 -g messagebus -o messagebus -d /run/dbus
+/usr/bin/dbus-uuidgen --ensure

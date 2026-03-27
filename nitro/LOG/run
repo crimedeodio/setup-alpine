@@ -1,0 +1,3 @@
+#!/bin/sh
+mkdir -p /var/log/nitro
+exec cat >> /var/log/nitro/current

@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /usr/lib/bluetooth/bluetoothd -n 2>&1

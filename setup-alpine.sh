@@ -9,7 +9,7 @@ keymap="us us"
 timezone="UTC"
 kernel="stable"
 
-disk="/dev/sda"
+disk="/dev/vda"
 root_filesystem="f2fs"
 swap="0"
 bootloader="limine"
@@ -25,11 +25,11 @@ APKREPOSOPTS="-c -$repository" \
 BOOTLOADER="$bootloader" \
 DISKOPTS="-k $kernel -m sys -s $swap $disk" \
 ERASE_DISKS="$disk" \
-HOSTNAMEOPTS="$hostname" \
 KEYMAPOPTS="$keymap" \
 ROOTFS="$root_filesystem" \
 TIMEZONEOPTS="$timezone" \
 USEROPTS="-a -g audio,input,video,netdev $username" \
+HOSTNAMEOPTS=none \
 INTERFACESOPTS=none \
 NTPOPTS=none \
 PROXYOPTS=none \
@@ -45,7 +45,7 @@ esac
 umount -R /mnt 2>/dev/null || true
 mount "$root_part" /mnt
 
-echo $hostname > /mnt/etc/hostname
+echo "$hostname" > /mnt/tmp/hostname
 cp -r "$SCRIPT_DIR/nitro" /mnt/tmp/nitro
 
 chroot /mnt /bin/sh << EOF
@@ -54,17 +54,34 @@ echo "root:$root_password" | chpasswd
 
 apk --no-cache --quiet add \
   --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing \
-  nitro-init eiwd agetty
+  nitro-init agetty bluez dbus dropbear iwd
 
 mkdir -p /etc/nitro
 cp -r /tmp/nitro/. /etc/nitro/
 rm -rf /tmp/nitro
 
-for i in 1 2 3; do
+cp /tmp/hostname /etc/hostname
+rm /tmp/hostname
+
+addgroup -S messagebus 2>/dev/null
+adduser -S -D -H -h /dev/null -s /sbin/nologin -G messagebus -g messagebus messagebus 2>/dev/null
+
+cat > /etc/iwd/main.conf <<IWD
+[General]
+EnableNetworkConfiguration=true
+NameResolvingService=none
+
+[DriverQuirks]
+DefaultInterface=true
+IWD
+
+for i in \$(seq 3); do
   ln -sf agetty@ /etc/nitro/agetty@tty\$i
 done
 
 ln -sf /usr/sbin/nitro /sbin/init
+
+echo "" > /etc/motd
 EOF
 
 umount /mnt
