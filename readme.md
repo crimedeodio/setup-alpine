@@ -1,4 +1,4 @@
-alpine linux with f2fs, limine and nitro-init.
+automated alpine linux installation script with support for f2fs and limine.
 
 # installation
 
@@ -11,17 +11,16 @@ apk add git patch
 
 clone the repository
 ```
-https://codeberg.org/crimedeodio/setup-alpine.git
+git clone https://codeberg.org/crimedeodio/setup-alpine.git
 ```
 
 then, configure and run the script
 ```
 cd setup-alpine
-vi setup-alpine.sh
+vi config.sh
 sh setup-alpine.sh
 ```
 
 # todo
 
-* modular service selection in the script
 * remove openrc
