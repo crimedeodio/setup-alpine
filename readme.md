@@ -2,11 +2,11 @@ automated alpine linux installation script with support for f2fs and limine.
 
 # installation
 
-in an alpine live boot, install `git` and `patch`
+in an alpine live boot, install `git`
 ```
 setup-interfaces -r # connect to the internet
 setup-apkrepos -1 # setup apk repositories
-apk add git patch
+apk add git
 ```
 
 clone the repository
@@ -20,7 +20,3 @@ cd setup-alpine
 vi config.sh
 sh setup-alpine.sh
 ```
-
-# todo
-
-* remove openrc

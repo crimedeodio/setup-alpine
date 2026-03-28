@@ -10,7 +10,7 @@ if { [ "$INSTALL_BLUETOOTH" = true ] || [ "$INSTALL_IWD" = true ]; } \
     exit 1
 fi
 
-patch /usr/sbin/setup-disk "$SCRIPT_DIR/setup-disk.patch"
+git apply -p1 --directory=/usr/sbin --unsafe-paths "$SCRIPT_DIR/setup-disk.patch"
 
 APKREPOSOPTS="-c -$repository" \
 BOOTLOADER="$bootloader" \

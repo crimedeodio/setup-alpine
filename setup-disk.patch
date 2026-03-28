@@ -1,5 +1,5 @@
 --- original/setup-disk	2026-03-24 22:22:15.203276839 -0300
-+++ patched/setup-disk	2026-03-24 23:18:32.359443672 -0300
++++ patched/setup-disk	2026-03-28 17:11:29.505164757 -0300
 @@ -422,6 +422,49 @@
  	echo "root=$root modules=$modules $kernel_opts" > "$mnt"/boot/cmdline.txt
  }
@@ -58,6 +58,15 @@
  		*) die "Bootloader \"$BOOTLOADER\" not supported!" ;;
  	esac
  
+@@ -648,7 +692,7 @@
+ 	local pkgs="$(grep -h -v -w sfdisk "$mnt"/etc/apk/world \
+ 		"$mnt"/var/lib/apk/world 2>/dev/null)"
+ 
+-	pkgs="$pkgs linux-$KERNEL_FLAVOR alpine-base $(select_bootloader_pkg) $(select_firmware_pkgs)"
++	pkgs="linux-$KERNEL_FLAVOR alpine-baselayout alpine-release apk-tools busybox busybox-suid musl-utils $(select_bootloader_pkg) $(select_firmware_pkgs)"
+ 	if [ "$(openrc --sys)" = "XEN0" ]; then
+ 		pkgs="$pkgs xen-hypervisor"
+ 	fi
 @@ -798,6 +842,8 @@
  		bootloader=grub-ieee1275
  	elif [ "$ARCH" = "s390x" ]; then
