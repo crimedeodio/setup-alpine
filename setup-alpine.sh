@@ -2,9 +2,9 @@
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 . "$SCRIPT_DIR/config.sh"
 
-if { [ "$INSTALL_BLUETOOTH" = true ] || [ "$INSTALL_IWD" = true ]; } \
-    && [ "$INSTALL_DBUS" != true ]; then
-    echo "ERROR: BLUETOOTH and IWD require INSTALL_DBUS=true" >&2
+if { [ "$install_bluetooth" = true ] || [ "$install_iwd" = true ]; } \
+    && [ "$install_dbus" != true ]; then
+    echo "ERROR: BLUETOOTH and IWD require install_dbus=true" >&2
     exit 1
 fi
 
@@ -37,11 +37,11 @@ mount "$root_part" /mnt
 
 NITRO_SERVICES="SYS LOG mdev hostname agetty@ loadkmap"
 
-[ "$INSTALL_DBUS"      = true ] && NITRO_SERVICES="$NITRO_SERVICES dbus"
-[ "$INSTALL_BLUETOOTH" = true ] && NITRO_SERVICES="$NITRO_SERVICES bluetoothd"
-[ "$INSTALL_IWD"       = true ] && NITRO_SERVICES="$NITRO_SERVICES iwd"
-[ "$INSTALL_DROPBEAR"  = true ] && NITRO_SERVICES="$NITRO_SERVICES dropbear"
-[ "$INSTALL_ACPID"     = true ] && NITRO_SERVICES="$NITRO_SERVICES acpid"
+[ "$install_dbus"      = true ] && NITRO_SERVICES="$NITRO_SERVICES dbus"
+[ "$install_bluetooth" = true ] && NITRO_SERVICES="$NITRO_SERVICES bluetoothd"
+[ "$install_iwd"       = true ] && NITRO_SERVICES="$NITRO_SERVICES iwd"
+[ "$install_dropbear"  = true ] && NITRO_SERVICES="$NITRO_SERVICES dropbear"
+[ "$install_acpid"     = true ] && NITRO_SERVICES="$NITRO_SERVICES acpid"
 
 echo "$hostname" > /mnt/tmp/hostname
 
@@ -51,10 +51,10 @@ for svc in $NITRO_SERVICES; do
 done
 
 PACKAGES="nitro-init agetty"
-[ "$INSTALL_DBUS"      = true ] && PACKAGES="$PACKAGES dbus"
-[ "$INSTALL_BLUETOOTH" = true ] && PACKAGES="$PACKAGES bluez"
-[ "$INSTALL_IWD"       = true ] && PACKAGES="$PACKAGES iwd"
-[ "$INSTALL_DROPBEAR"  = true ] && PACKAGES="$PACKAGES dropbear"
+[ "$install_dbus"      = true ] && PACKAGES="$PACKAGES dbus"
+[ "$install_bluetooth" = true ] && PACKAGES="$PACKAGES bluez"
+[ "$install_iwd"       = true ] && PACKAGES="$PACKAGES iwd"
+[ "$install_dropbear"  = true ] && PACKAGES="$PACKAGES dropbear"
 
 chroot /mnt /bin/sh << EOF
 set -e
@@ -74,14 +74,14 @@ cp /tmp/hostname /etc/hostname
 rm  /tmp/hostname
 
 # dbus
-if [ "$INSTALL_DBUS" = true ]; then
+if [ "$install_dbus" = true ]; then
     addgroup -S messagebus 2>/dev/null || true
     adduser -S -D -H -h /dev/null -s /sbin/nologin \
         -G messagebus -g messagebus messagebus 2>/dev/null || true
 fi
 
 # iwd
-if [ "$INSTALL_IWD" = true ]; then
+if [ "$install_iwd" = true ]; then
     mkdir -p /etc/iwd
     cat > /etc/iwd/main.conf << IWD
 [General]
@@ -94,7 +94,7 @@ IWD
 fi
 
 # agetty
-for i in \$(seq $AGETTY_TTYS); do
+for i in \$(seq $agetty_ttys); do
     ln -sf agetty@ /etc/nitro/agetty@tty\$i
 done
 
