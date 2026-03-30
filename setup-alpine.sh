@@ -18,7 +18,7 @@ KEYMAPOPTS="$keymap" \
 ROOTFS="$root_filesystem" \
 TIMEZONEOPTS="$timezone" \
 USEROPTS="-a -g audio,input,video,netdev $username" \
-HOSTNAMEOPTS=none \
+HOSTNAMEOPTS="$hostname" \
 INTERFACESOPTS=none \
 NTPOPTS=none \
 PROXYOPTS=none \
@@ -50,7 +50,7 @@ for svc in $NITRO_SERVICES; do
     cp -r "$SCRIPT_DIR/nitro/$svc" /mnt/tmp/nitro/
 done
 
-PACKAGES="nitro-init agetty"
+PACKAGES="nitro-init agetty doas"
 [ "$install_dbus"      = true ] && PACKAGES="$PACKAGES dbus"
 [ "$install_bluetooth" = true ] && PACKAGES="$PACKAGES bluez"
 [ "$install_iwd"       = true ] && PACKAGES="$PACKAGES iwd"
@@ -78,6 +78,7 @@ if [ "$install_dbus" = true ]; then
     addgroup -S messagebus 2>/dev/null || true
     adduser -S -D -H -h /dev/null -s /sbin/nologin \
         -G messagebus -g messagebus messagebus 2>/dev/null || true
+    echo "nitroctl up dbus" >> /etc/nitro/SYS/setup
 fi
 
 # iwd
@@ -101,6 +102,7 @@ done
 # loadkmap
 echo "zcat /etc/keymap/${keymap##* }.bmap.gz | loadkmap" >> /etc/nitro/loadkmap/setup
 
+printf "\nexit 0\n" >> /etc/nitro/SYS/setup
 ln -sf /usr/sbin/nitro /sbin/init
 
 echo "" > /etc/motd

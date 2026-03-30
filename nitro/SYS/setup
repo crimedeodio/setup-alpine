@@ -7,8 +7,6 @@ mount -o remount,rw /
 
 mkdir -p /run/nitro/notify
 
-for i in $(seq 3); do
-  nitroctl up agetty@tty\$i
-done
-
-exit 0
+nitroctl up mdev
+nitroctl up loadkmap
+nitroctl up hostname
