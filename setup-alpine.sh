@@ -73,6 +73,11 @@ rm -rf /tmp/nitro
 cp /tmp/hostname /etc/hostname
 rm  /tmp/hostname
 
+#mdev
+cat > /etc/mdev.conf << MDV
+$MODALIAS=.* 0:0 660 @modprobe "$MODALIAS"
+MDV
+
 # dbus
 if [ "$install_dbus" = true ]; then
     addgroup -S messagebus 2>/dev/null || true

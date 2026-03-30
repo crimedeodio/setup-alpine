@@ -1,6 +1,10 @@
 #!/bin/sh
 mdev -s
 
+find /sys/ -name modalias -print0 2>/dev/null | \
+  xargs -0 sort -u -z | \
+  xargs -0 modprobe -abq 2>/dev/null || true
+
 [ -e /dev/console ] || mknod -m 600 /dev/console c 5 1
 [ -e /dev/tty ]     || mknod -m 666 /dev/tty     c 5 0
 [ -e /dev/null ]    || mknod -m 666 /dev/null     c 1 3
