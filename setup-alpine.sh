@@ -1,6 +1,4 @@
 #!/bin/sh
-set -e
-
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 . "$SCRIPT_DIR/config.sh"
 
@@ -36,15 +34,16 @@ esac
 umount /mnt 2>/dev/null || true
 mount "$root_part" /mnt
 
-echo "$hostname" > /mnt/tmp/hostname
 
-NITRO_SERVICES="SYS LOG mdev hostname agetty@"
+NITRO_SERVICES="SYS LOG mdev hostname agetty@ loadkmap"
 
 [ "$INSTALL_DBUS"      = true ] && NITRO_SERVICES="$NITRO_SERVICES dbus"
 [ "$INSTALL_BLUETOOTH" = true ] && NITRO_SERVICES="$NITRO_SERVICES bluetoothd"
 [ "$INSTALL_IWD"       = true ] && NITRO_SERVICES="$NITRO_SERVICES iwd"
 [ "$INSTALL_DROPBEAR"  = true ] && NITRO_SERVICES="$NITRO_SERVICES dropbear"
 [ "$INSTALL_ACPID"     = true ] && NITRO_SERVICES="$NITRO_SERVICES acpid"
+
+echo "$hostname" > /mnt/tmp/hostname
 
 mkdir -p /mnt/tmp/nitro
 for svc in $NITRO_SERVICES; do
@@ -99,7 +98,11 @@ for i in \$(seq $AGETTY_TTYS); do
     ln -sf agetty@ /etc/nitro/agetty@tty\$i
 done
 
+# loadkmap
+echo "zcat /etc/keymap/${keymap##* }.bmap.gz | loadkmap" >> /etc/nitro/loadkmap/setup
+
 ln -sf /usr/sbin/nitro /sbin/init
+
 echo "" > /etc/motd
 EOF
 
