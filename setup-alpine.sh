@@ -35,7 +35,7 @@ umount /mnt 2>/dev/null || true
 mount "$root_part" /mnt
 
 
-NITRO_SERVICES="SYS LOG mdev hostname agetty@ loadkmap"
+NITRO_SERVICES="SYS LOG udev hostname agetty@ loadkmap"
 
 [ "$install_dbus"      = true ] && NITRO_SERVICES="$NITRO_SERVICES dbus"
 [ "$install_bluetooth" = true ] && NITRO_SERVICES="$NITRO_SERVICES bluetoothd"
@@ -72,25 +72,6 @@ rm -rf /tmp/nitro
 
 cp /tmp/hostname /etc/hostname
 rm  /tmp/hostname
-
-#mdev
-cat > /etc/mdev.conf << MDV
-\$MODALIAS=.* 0:0 660 @modprobe "\$MODALIAS"
-
-null     0:0 666
-zero     0:0 666
-full     0:0 666
-random   0:0 666
-urandom  0:0 666
-
-input/.* 0:input 660
-
-dri/.*   0:video 660
-video/.* 0:video 660
-fb/.*    0:video 660
-
-snd/.*   0:audio 660
-MDV
 
 # dbus
 if [ "$install_dbus" = true ]; then
