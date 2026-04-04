@@ -75,7 +75,21 @@ rm  /tmp/hostname
 
 #mdev
 cat > /etc/mdev.conf << MDV
-$MODALIAS=.* 0:0 660 @modprobe "$MODALIAS"
+\$MODALIAS=.* 0:0 660 @modprobe "\$MODALIAS"
+
+null     0:0 666
+zero     0:0 666
+full     0:0 666
+random   0:0 666
+urandom  0:0 666
+
+input/.* 0:input 660
+
+dri/.*   0:video 660
+video/.* 0:video 660
+fb/.*    0:video 660
+
+snd/.*   0:audio 660
 MDV
 
 # dbus
